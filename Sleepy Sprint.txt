@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Sleepy Sprint</title>
+    <style>
+        body { text-align: center; font-family: Arial, sans-serif; }
+        canvas { background: lightblue; display: block; margin: auto; }
+    </style>
+</head>
+<body>
+    <h1>Sleepy Sprint</h1>
+    <p>Use arrow keys to move. Avoid obstacles and grab coffee to stay awake!</p>
+    <canvas id="gameCanvas" width="400" height="400"></canvas>
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+
+        let player = { x: 180, y: 350, width: 40, height: 40, speed: 5 };
+        let obstacles = [];
+        let coffee = { x: Math.random() * 360, y: 0, width: 30, height: 30 };
+        let score = 0;
+        let energy = 100;
+        let gameRunning = true;
+
+        function createObstacle() {
+            obstacles.push({ x: Math.random() * 360, y: 0, width: 40, height: 40, speed: 3 });
+        }
+        setInterval(createObstacle, 2000);
+
+        document.addEventListener("keydown", function(event) {
+            if (event.key === "ArrowLeft" && player.x > 0) player.x -= player.speed;
+            if (event.key === "ArrowRight" && player.x < 360) player.x += player.speed;
+        });
+
+        function updateGame() {
+            if (!gameRunning) return;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.fillStyle = "blue";
+            ctx.fillRect(player.x, player.y, player.width, player.height);
+
+            ctx.fillStyle = "red";
+            obstacles.forEach((obstacle, index) => {
+                ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
+                obstacle.y += obstacle.speed;
+                if (obstacle.y > 400) obstacles.splice(index, 1);
+                if (checkCollision(player, obstacle)) {
+                    energy -= 20;
+                    obstacles.splice(index, 1);
+                }
+            });
+            
+            ctx.fillStyle = "brown";
+            ctx.fillRect(coffee.x, coffee.y, coffee.width, coffee.height);
+            coffee.y += 3;
+            if (coffee.y > 400) {
+                coffee.y = 0;
+                coffee.x = Math.random() * 360;
+            }
+            if (checkCollision(player, coffee)) {
+                energy += 10;
+                coffee.y = -30;
+            }
+            
+            energy -= 0.1;
+            if (energy <= 0) {
+                alert("You fell asleep! Score: " + score);
+                gameRunning = false;
+            }
+            
+            ctx.fillStyle = "black";
+            ctx.fillText("Score: " + score, 10, 20);
+            ctx.fillText("Energy: " + Math.round(energy), 10, 40);
+            
+            score++;
+            requestAnimationFrame(updateGame);
+        }
+        
+        function checkCollision(a, b) {
+            return a.x < b.x + b.width && a.x + a.width > b.x && a.y < b.y + b.height && a.y + a.height > b.y;
+        }
+        
+        updateGame();
+    </script>
+</body>
+</html>
